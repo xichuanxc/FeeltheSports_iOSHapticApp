@@ -1,6 +1,3 @@
-# Source assets not needed after import into asset catalog
-app_icon.png
-
 # Xcode build artifacts
 build/
 DerivedData/
