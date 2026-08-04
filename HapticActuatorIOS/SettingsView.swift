@@ -24,9 +24,6 @@ struct SettingsView: View {
 
     private var hardwareCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Haptic Hardware")
-                .font(.caption)
-                .foregroundStyle(.secondary)
             infoRow("Device",      deviceModel)
             infoRow("iOS",         UIDevice.current.systemVersion)
             infoRow("Engine",      state.capabilities.tier.label)
