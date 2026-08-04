@@ -11,6 +11,8 @@ struct ContentView: View {
                 Spacer().frame(height: 40)
                 statusSection
                 Spacer()
+                uniLogoSection
+                    .padding(.bottom, 32)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(statusBackground.ignoresSafeArea())
@@ -56,15 +58,19 @@ struct ContentView: View {
     // MARK: Status
 
     private var statusSection: some View {
-        VStack(spacing: 12) {
-            Circle()
-                .fill(statusDotColor)
-                .frame(width: 14, height: 14)
-                .shadow(color: statusDotColor.opacity(0.6), radius: 6)
-            Text(statusLabel)
-                .font(.title3.weight(.semibold))
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+        VStack(spacing: 10) {
+            HStack(spacing: 8) {
+                Circle()
+                    .fill(statusDotColor)
+                    .frame(width: 8, height: 8)
+                Text(statusLabel)
+                    .font(.subheadline.weight(.medium))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(statusDotColor.opacity(0.12))
+            .clipShape(Capsule())
+
             if let offset = state.clockOffsetMs {
                 Text("Clock offset \(offset) ms")
                     .font(.caption)
@@ -75,28 +81,38 @@ struct ContentView: View {
 
     private var statusLabel: String {
         switch state.connectionStatus {
-        case .searching:              return "Searching for server…"
-        case .connecting(let n):      return "Connecting to \(n)"
-        case .reconnecting(let n):    return "Reconnecting to \(n)"
-        case .connected(let n):       return n
+        case .searching:           return "Searching for Haptic Server…"
+        case .connecting(let n):   return "Connecting to \(n)…"
+        case .reconnecting(let n): return "Reconnecting to \(n)…"
+        case .connected(let n):    return "Connected to \(n)"
         }
     }
 
     private var statusDotColor: Color {
         switch state.connectionStatus {
-        case .searching:     return Color(.systemGray)
-        case .connecting:    return Color(.systemYellow)
-        case .reconnecting:  return Color(.systemRed)
-        case .connected:     return Color(.systemGreen)
+        case .searching:    return Color(hex: 0x9E9E9E)
+        case .connecting:   return Color(hex: 0xFF9800)
+        case .reconnecting: return Color(hex: 0xFF9800)
+        case .connected:    return Color(hex: 0x4CAF50)
         }
+    }
+
+    // MARK: University logo
+
+    private var uniLogoSection: some View {
+        Image("UniLogo")
+            .resizable()
+            .scaledToFit()
+            .frame(width: 188)
+            .opacity(0.75)
     }
 
     private var statusBackground: Color {
         switch state.connectionStatus {
-        case .searching:     return Color(.systemBackground)
-        case .connecting:    return Color(.systemYellow).opacity(0.08)
-        case .reconnecting:  return Color(.systemRed).opacity(0.08)
-        case .connected:     return Color(.systemGreen).opacity(0.08)
+        case .searching:    return Color(.systemBackground)
+        case .connecting:   return Color(hex: 0xFF9800).opacity(0.06)
+        case .reconnecting: return Color(hex: 0xFF9800).opacity(0.06)
+        case .connected:    return Color(hex: 0x4CAF50).opacity(0.06)
         }
     }
 }
