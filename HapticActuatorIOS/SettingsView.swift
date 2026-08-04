@@ -24,17 +24,20 @@ struct SettingsView: View {
 
     private var hardwareCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            infoRow("Device",      deviceModel)
-            infoRow("iOS",         UIDevice.current.systemVersion)
-            infoRow("Engine",      state.capabilities.tier.label)
-            infoRow("CoreHaptics", state.capabilities.supportsHaptics ? "Supported" : "Not supported")
-            infoRow("Transient",   state.capabilities.supportsTransient  ? "Yes" : "No")
-            infoRow("Continuous",  state.capabilities.supportsContinuous ? "Yes" : "No")
+            infoRow("Device",  "\(deviceModel)  ·  iOS \(UIDevice.current.systemVersion)")
+            infoRow("Haptics", hapticsSummary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
         .background(Color(.secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    private var hapticsSummary: String {
+        var parts: [String] = [state.capabilities.tier.label]
+        if state.capabilities.supportsTransient  { parts.append("Transient") }
+        if state.capabilities.supportsContinuous { parts.append("Continuous") }
+        return parts.joined(separator: "  ·  ")
     }
 
     private func infoRow(_ label: String, _ value: String) -> some View {
@@ -57,22 +60,24 @@ struct SettingsView: View {
 
     private let knownModels: [String: String] = [
         "iPhone10,1": "iPhone 8",       "iPhone10,4": "iPhone 8",
-        "iPhone10,2": "iPhone 8 Plus",  "iPhone10,5": "iPhone 8 Plus",
-        "iPhone10,3": "iPhone X",       "iPhone10,6": "iPhone X",
-        "iPhone11,2": "iPhone XS",      "iPhone11,4": "iPhone XS Max",
-        "iPhone11,6": "iPhone XS Max",  "iPhone11,8": "iPhone XR",
-        "iPhone12,1": "iPhone 11",      "iPhone12,3": "iPhone 11 Pro",
-        "iPhone12,5": "iPhone 11 Pro Max",
-        "iPhone13,1": "iPhone 12 mini", "iPhone13,2": "iPhone 12",
-        "iPhone13,3": "iPhone 12 Pro",  "iPhone13,4": "iPhone 12 Pro Max",
-        "iPhone14,4": "iPhone 13 mini", "iPhone14,5": "iPhone 13",
-        "iPhone14,2": "iPhone 13 Pro",  "iPhone14,3": "iPhone 13 Pro Max",
-        "iPhone14,7": "iPhone 14",      "iPhone14,8": "iPhone 14 Plus",
-        "iPhone15,2": "iPhone 14 Pro",  "iPhone15,3": "iPhone 14 Pro Max",
-        "iPhone15,4": "iPhone 15",      "iPhone15,5": "iPhone 15 Plus",
-        "iPhone16,1": "iPhone 15 Pro",  "iPhone16,2": "iPhone 15 Pro Max",
-        "iPhone17,3": "iPhone 16",      "iPhone17,4": "iPhone 16 Plus",
-        "iPhone17,1": "iPhone 16 Pro",  "iPhone17,2": "iPhone 16 Pro Max",
+        "iPhone10,2": "iPhone 8 Plus",      "iPhone10,5": "iPhone 8 Plus",
+        "iPhone10,3": "iPhone X",            "iPhone10,6": "iPhone X",
+        "iPhone11,2": "iPhone XS",           "iPhone11,4": "iPhone XS Max",
+        "iPhone11,6": "iPhone XS Max",       "iPhone11,8": "iPhone XR",
+        "iPhone12,1": "iPhone 11",           "iPhone12,3": "iPhone 11 Pro",
+        "iPhone12,5": "iPhone 11 Pro Max",   "iPhone12,8": "iPhone SE (2nd gen)",
+        "iPhone13,1": "iPhone 12 mini",      "iPhone13,2": "iPhone 12",
+        "iPhone13,3": "iPhone 12 Pro",       "iPhone13,4": "iPhone 12 Pro Max",
+        "iPhone14,2": "iPhone 13 Pro",       "iPhone14,3": "iPhone 13 Pro Max",
+        "iPhone14,4": "iPhone 13 mini",      "iPhone14,5": "iPhone 13",
+        "iPhone14,6": "iPhone SE (3rd gen)",
+        "iPhone14,7": "iPhone 14",           "iPhone14,8": "iPhone 14 Plus",
+        "iPhone15,2": "iPhone 14 Pro",       "iPhone15,3": "iPhone 14 Pro Max",
+        "iPhone15,4": "iPhone 15",           "iPhone15,5": "iPhone 15 Plus",
+        "iPhone16,1": "iPhone 15 Pro",       "iPhone16,2": "iPhone 15 Pro Max",
+        "iPhone16,3": "iPhone 16e",
+        "iPhone17,1": "iPhone 16 Pro",       "iPhone17,2": "iPhone 16 Pro Max",
+        "iPhone17,3": "iPhone 16",           "iPhone17,4": "iPhone 16 Plus",
     ]
 
     // MARK: Diagnostics
@@ -107,10 +112,20 @@ struct SettingsView: View {
             }
             Toggle("Filter weak events", isOn: $state.filterWeakEvents)
                 .font(.caption)
+            if state.filterWeakEvents {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Drop events below \(String(format: "%.2f", state.filterThreshold))×")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Slider(value: $state.filterThreshold, in: 0.05...0.50, step: 0.01)
+                }
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
         }
         .padding()
         .background(Color(.secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12))
+        .animation(.easeInOut(duration: 0.2), value: state.filterWeakEvents)
     }
 
     // MARK: Test

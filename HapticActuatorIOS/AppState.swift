@@ -21,8 +21,11 @@ final class AppState {
     var filterWeakEvents: Bool = false {
         didSet { UserDefaults.standard.set(filterWeakEvents, forKey: "filter_weak_events") }
     }
+    var filterThreshold: Float = 0.15 {
+        didSet { UserDefaults.standard.set(filterThreshold, forKey: "filter_threshold") }
+    }
 
-    var effectiveMinIntensity: Float { filterWeakEvents ? 0.15 : 0.0 }
+    var effectiveMinIntensity: Float { filterWeakEvents ? filterThreshold : 0.0 }
 
     var showDNDPrompt: Bool = false
     private(set) var dndNeverAsk: Bool = false {
@@ -59,6 +62,9 @@ final class AppState {
             strengthScale = defaults.float(forKey: "strength_scale")
         }
         filterWeakEvents = defaults.bool(forKey: "filter_weak_events")
+        if defaults.object(forKey: "filter_threshold") != nil {
+            filterThreshold = defaults.float(forKey: "filter_threshold")
+        }
         dndNeverAsk = defaults.bool(forKey: "dnd_never_ask")
         capabilities = detectCapabilities()
         hapticPlayer = HapticPlayer(capabilities: capabilities)
