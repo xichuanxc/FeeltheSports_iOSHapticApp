@@ -4,44 +4,78 @@ struct ContentView: View {
     @Environment(AppState.self) private var state
 
     var body: some View {
-        @Bindable var state = state
-        ScrollView {
-            VStack(spacing: 16) {
-                statusCard
-                diagnosticsCard
-                controlsCard
-                testCard
+        NavigationStack {
+            VStack(spacing: 0) {
+                Spacer()
+                iconSection
+                Spacer().frame(height: 40)
+                statusSection
+                Spacer()
             }
-            .padding()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(statusBackground.ignoresSafeArea())
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    NavigationLink(destination: AboutView()) {
+                        Image(systemName: "info.circle")
+                            .font(.body)
+                    }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink(destination: SettingsView()) {
+                        Image(systemName: "gearshape")
+                            .font(.body)
+                    }
+                }
+            }
         }
         .onAppear { UIApplication.shared.isIdleTimerDisabled = true }
         .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
+        .alert("Enable Do Not Disturb", isPresented: Binding(
+            get: { state.showDNDPrompt },
+            set: { if !$0 { state.dismissDNDPrompt(permanently: false) } }
+        )) {
+            Button("Got it") { state.dismissDNDPrompt(permanently: false) }
+            Button("Don't Ask Again", role: .cancel) { state.dismissDNDPrompt(permanently: true) }
+        } message: {
+            Text("For the best experience, enable Do Not Disturb or a Focus mode before watching. Swipe down from the top-right corner of your screen to access Focus controls.")
+        }
     }
 
-    // MARK: Status card
+    // MARK: Icon
 
-    private var statusCard: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Connection")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            HStack(spacing: 10) {
-                Circle()
-                    .fill(statusDotColor)
-                    .frame(width: 10, height: 10)
-                Text(statusLabel)
-                    .font(.headline)
+    private var iconSection: some View {
+        Image("HapticIcon")
+            .resizable()
+            .scaledToFit()
+            .frame(width: 120, height: 120)
+            .clipShape(RoundedRectangle(cornerRadius: 26))
+            .shadow(color: .black.opacity(0.15), radius: 12, y: 6)
+    }
+
+    // MARK: Status
+
+    private var statusSection: some View {
+        VStack(spacing: 12) {
+            Circle()
+                .fill(statusDotColor)
+                .frame(width: 14, height: 14)
+                .shadow(color: statusDotColor.opacity(0.6), radius: 6)
+            Text(statusLabel)
+                .font(.title3.weight(.semibold))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+            if let offset = state.clockOffsetMs {
+                Text("Clock offset \(offset) ms")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding()
-        .background(statusBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
     private var statusLabel: String {
         switch state.connectionStatus {
-        case .searching:              return "Searching…"
+        case .searching:              return "Searching for server…"
         case .connecting(let n):      return "Connecting to \(n)"
         case .reconnecting(let n):    return "Reconnecting to \(n)"
         case .connected(let n):       return n
@@ -59,84 +93,10 @@ struct ContentView: View {
 
     private var statusBackground: Color {
         switch state.connectionStatus {
-        case .searching:     return Color(.systemGray5)
-        case .connecting:    return Color(.systemYellow).opacity(0.2)
-        case .reconnecting:  return Color(.systemRed).opacity(0.2)
-        case .connected:     return Color(.systemGreen).opacity(0.2)
-        }
-    }
-
-    // MARK: Diagnostics
-
-    private var diagnosticsCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Diagnostics")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            diagnosticRow("Haptic tier",     state.capabilities.tier.label)
-            diagnosticRow("Clock offset",    state.clockOffsetMs.map { "\($0) ms" } ?? "—")
-            diagnosticRow("Events loaded",   state.eventCount.map { "\($0)" } ?? "—")
-            diagnosticRow("Last sync",       state.lastSyncMediaT.map { String(format: "%.3f s", $0) } ?? "—")
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding()
-        .background(Color(.secondarySystemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-    }
-
-    private func diagnosticRow(_ label: String, _ value: String) -> some View {
-        HStack {
-            Text(label).foregroundStyle(.secondary)
-            Spacer()
-            Text(value).fontDesign(.monospaced)
-        }
-        .font(.caption)
-    }
-
-    // MARK: Controls
-
-    private var controlsCard: some View {
-        @Bindable var state = state
-        return VStack(alignment: .leading, spacing: 14) {
-            Text("Controls")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Strength  \(String(format: "%.2f", state.strengthScale))×")
-                    .font(.caption)
-                Slider(value: $state.strengthScale, in: 0.5...3.0)
-            }
-            Toggle("Filter weak events", isOn: $state.filterWeakEvents)
-                .font(.caption)
-        }
-        .padding()
-        .background(Color(.secondarySystemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-    }
-
-    // MARK: Test buttons
-
-    private var testCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Test")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Button("Test Timeline") { state.runTestTimeline() }
-                .buttonStyle(.borderedProminent)
-                .frame(maxWidth: .infinity)
-        }
-        .padding()
-        .background(Color(.secondarySystemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-    }
-}
-
-private extension HapticTier {
-    var label: String {
-        switch self {
-        case .coreHaptics: return "Core Haptics"
-        case .uiImpact:    return "UIImpact"
-        case .none:        return "None"
+        case .searching:     return Color(.systemBackground)
+        case .connecting:    return Color(.systemYellow).opacity(0.08)
+        case .reconnecting:  return Color(.systemRed).opacity(0.08)
+        case .connected:     return Color(.systemGreen).opacity(0.08)
         }
     }
 }

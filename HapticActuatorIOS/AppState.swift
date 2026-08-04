@@ -24,6 +24,16 @@ final class AppState {
 
     var effectiveMinIntensity: Float { filterWeakEvents ? 0.15 : 0.0 }
 
+    var showDNDPrompt: Bool = false
+    private(set) var dndNeverAsk: Bool = false {
+        didSet { UserDefaults.standard.set(dndNeverAsk, forKey: "dnd_never_ask") }
+    }
+
+    func dismissDNDPrompt(permanently: Bool) {
+        showDNDPrompt = false
+        if permanently { dndNeverAsk = true }
+    }
+
     let mediaClock   = MediaClock()
     let scheduler    = Scheduler()
     let hapticPlayer: HapticPlayer
@@ -49,6 +59,7 @@ final class AppState {
             strengthScale = defaults.float(forKey: "strength_scale")
         }
         filterWeakEvents = defaults.bool(forKey: "filter_weak_events")
+        dndNeverAsk = defaults.bool(forKey: "dnd_never_ask")
         capabilities = detectCapabilities()
         hapticPlayer = HapticPlayer(capabilities: capabilities)
         try? hapticPlayer.setupEngine()
@@ -183,6 +194,7 @@ final class AppState {
     }
 
     func handleBecomeActive() {
+        if !dndNeverAsk { showDNDPrompt = true }
         reconnectDelay = reconnectDelayMin
         if case .connected   = connectionStatus { return }
         if case .connecting  = connectionStatus { return }
