@@ -30,11 +30,9 @@ struct AboutView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text("FeeltheSports")
                     .font(.title3.weight(.bold))
-                Image("UniLogo")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 30)
-                    .opacity(0.75)
+                Text("Real-time haptic feedback\nfor tennis match viewing")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
             }
             Spacer()
         }
