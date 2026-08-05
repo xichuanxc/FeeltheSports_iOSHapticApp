@@ -140,7 +140,8 @@ final class AppState {
                 mediaClock.syncAnchor(mediaT: t, serverNs: serverNs, rate: rate)
                 if let tl = currentTimeline {
                     scheduler.start(timeline: tl, mediaClock: mediaClock, player: hapticPlayer,
-                                    strengthScale: strengthScale, minIntensity: effectiveMinIntensity)
+                                    strengthScale: { [weak self] in self?.strengthScale ?? 1.5 },
+                                    minIntensity:  { [weak self] in self?.effectiveMinIntensity ?? 0.0 })
                 }
             }
 
@@ -155,7 +156,8 @@ final class AppState {
                 mediaClock.syncAnchor(mediaT: t, serverNs: serverNs, rate: mediaClock.rate)
                 if mediaClock.isPlaying, let tl = currentTimeline {
                     scheduler.start(timeline: tl, mediaClock: mediaClock, player: hapticPlayer,
-                                    strengthScale: strengthScale, minIntensity: effectiveMinIntensity)
+                                    strengthScale: { [weak self] in self?.strengthScale ?? 1.5 },
+                                    minIntensity:  { [weak self] in self?.effectiveMinIntensity ?? 0.0 })
                 }
             }
 
@@ -164,7 +166,8 @@ final class AppState {
                 mediaClock.syncAnchor(mediaT: mediaClock.mediaTime(), serverNs: serverNs, rate: rate)
                 if mediaClock.isPlaying, let tl = currentTimeline {
                     scheduler.start(timeline: tl, mediaClock: mediaClock, player: hapticPlayer,
-                                    strengthScale: strengthScale, minIntensity: effectiveMinIntensity)
+                                    strengthScale: { [weak self] in self?.strengthScale ?? 1.5 },
+                                    minIntensity:  { [weak self] in self?.effectiveMinIntensity ?? 0.0 })
                 }
             }
 
@@ -229,6 +232,7 @@ final class AppState {
         let tl = Timeline(events: events)
         mediaClock.syncAnchor(mediaT: 0.0, serverNs: nanoTime(), rate: 1.0)
         scheduler.start(timeline: tl, mediaClock: mediaClock, player: hapticPlayer,
-                        strengthScale: strengthScale, minIntensity: effectiveMinIntensity)
+                        strengthScale: { [weak self] in self?.strengthScale ?? 1.5 },
+                        minIntensity:  { [weak self] in self?.effectiveMinIntensity ?? 0.0 })
     }
 }

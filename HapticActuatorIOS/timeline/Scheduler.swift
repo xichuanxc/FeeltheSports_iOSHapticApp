@@ -8,7 +8,7 @@ final class Scheduler {
     private let batchWindowS: Double    = 0.2
 
     func start(timeline: Timeline, mediaClock: MediaClock, player: HapticPlayer,
-               strengthScale: Float, minIntensity: Float) {
+               strengthScale: @escaping () -> Float, minIntensity: @escaping () -> Float) {
         currentTask?.cancel()
         currentTask = Task {
             var i = timeline.indexFrom(mediaClock.mediaTime())
@@ -28,8 +28,10 @@ final class Scheduler {
                     i += 1; continue
                 }
 
-                let scaled = min(max(event.intensity * strengthScale, 0), 1)
-                if scaled < minIntensity { i += 1; continue }
+                let scale = strengthScale()
+                let threshold = minIntensity()
+                let scaled = min(max(event.intensity * scale, 0), 1)
+                if scaled < threshold { i += 1; continue }
 
                 var batch = [BatchEvent(visionType: event.visionType, intensity: scaled, delayFromFirstS: 0)]
                 var j = i + 1
@@ -37,8 +39,8 @@ final class Scheduler {
                     let next = timeline.events[j]
                     let gapS = next.time - event.time
                     if gapS > batchWindowS { break }
-                    let nextScaled = min(max(next.intensity * strengthScale, 0), 1)
-                    if nextScaled >= minIntensity {
+                    let nextScaled = min(max(next.intensity * scale, 0), 1)
+                    if nextScaled >= threshold {
                         batch.append(BatchEvent(visionType: next.visionType,
                                                 intensity: nextScaled,
                                                 delayFromFirstS: gapS))
