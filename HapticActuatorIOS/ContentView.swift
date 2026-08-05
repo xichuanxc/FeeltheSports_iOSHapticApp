@@ -58,25 +58,17 @@ struct ContentView: View {
     // MARK: Status
 
     private var statusSection: some View {
-        VStack(spacing: 10) {
-            HStack(spacing: 8) {
-                Circle()
-                    .fill(statusDotColor)
-                    .frame(width: 8, height: 8)
-                Text(statusLabel)
-                    .font(.subheadline.weight(.medium))
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .background(statusDotColor.opacity(0.12))
-            .clipShape(Capsule())
-
-            if let offset = state.clockOffsetMs {
-                Text("Clock offset \(offset) ms")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
+        HStack(spacing: 8) {
+            Circle()
+                .fill(statusDotColor)
+                .frame(width: 8, height: 8)
+            Text(statusLabel)
+                .font(.subheadline.weight(.medium))
         }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(statusDotColor.opacity(0.12))
+        .clipShape(Capsule())
     }
 
     private var statusLabel: String {
