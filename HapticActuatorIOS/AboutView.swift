@@ -55,8 +55,6 @@ struct AboutView: View {
             row("Device",        deviceModel)
             Divider().padding(.leading, 16)
             row("iOS",           "iOS \(UIDevice.current.systemVersion)")
-            Divider().padding(.leading, 16)
-            row("Haptics",       state.capabilities.tier.label)
         }
         .background(Color(.secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12))
