@@ -33,14 +33,9 @@ struct SimpleSettingsView: View {
 
     private var vibrationCard: some View {
         VStack(alignment: .leading, spacing: 14) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Vibration Level")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Text("Set the vibration level.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
+            Text("Set the vibration level.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
 
             Picker("Vibration Level", selection: presetBinding) {
                 Text("Low").tag(0)
@@ -62,6 +57,10 @@ struct SimpleSettingsView: View {
             }
             .buttonStyle(.borderedProminent)
             .frame(maxWidth: .infinity)
+            Text("Plays the strongest hit at the selected level.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .center)
         }
         .padding()
         .background(Color(.secondarySystemBackground))
