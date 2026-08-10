@@ -19,21 +19,17 @@ struct AboutView: View {
     // MARK: Header
 
     private var headerSection: some View {
-        HStack(alignment: .center, spacing: 16) {
+        HStack(alignment: .center, spacing: 12) {
             Image("HapticIcon")
                 .resizable()
                 .scaledToFit()
-                .frame(width: 80, height: 80)
-                .clipShape(RoundedRectangle(cornerRadius: 18))
-                .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
+                .frame(width: 48, height: 48)
+                .clipShape(RoundedRectangle(cornerRadius: 11))
+                .shadow(color: .black.opacity(0.15), radius: 6, y: 3)
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text("FeeltheSports")
-                    .font(.title3.weight(.bold))
-                Text("Real-time haptic feedback\nfor tennis match viewing")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
+            Text("FeeltheSports")
+                .font(.headline.weight(.bold))
+
             Spacer()
         }
     }
@@ -56,9 +52,11 @@ struct AboutView: View {
             Divider().padding(.leading, 16)
             row("Version",       versionString)
             Divider().padding(.leading, 16)
-            row("Device",        "\(deviceModel)  ·  iOS \(UIDevice.current.systemVersion)")
+            row("Device",        deviceModel)
             Divider().padding(.leading, 16)
-            row("Haptics",       hapticsSummary)
+            row("iOS",           "iOS \(UIDevice.current.systemVersion)")
+            Divider().padding(.leading, 16)
+            row("Haptics",       state.capabilities.tier.label)
         }
         .background(Color(.secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -86,20 +84,7 @@ struct AboutView: View {
 
     private var versionString: String {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
-        guard let url   = Bundle.main.executableURL,
-              let attrs = try? FileManager.default.attributesOfItem(atPath: url.path),
-              let date  = attrs[.modificationDate] as? Date
-        else { return version }
-        let f = DateFormatter()
-        f.dateFormat = "d MMM yyyy"
-        return "\(version)  BUILD \(f.string(from: date))"
-    }
-
-    private var hapticsSummary: String {
-        var parts: [String] = [state.capabilities.tier.label]
-        if state.capabilities.supportsTransient  { parts.append("Transient") }
-        if state.capabilities.supportsContinuous { parts.append("Continuous") }
-        return parts.joined(separator: "  ·  ")
+        return "\(version) · 10 Aug 2026"
     }
 
     private var deviceModel: String {

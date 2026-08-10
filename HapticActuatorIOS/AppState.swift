@@ -15,17 +15,24 @@ final class AppState {
     var eventCount: Int?       = nil
     var clockOffsetMs: Int64?  = nil
     var lastSyncMediaT: Double? = nil
-    var strengthScale: Float = 1.5 {
+    var strengthScale: Float = 1.0 {
         didSet { UserDefaults.standard.set(strengthScale, forKey: "strength_scale") }
     }
-    var filterWeakEvents: Bool = false {
-        didSet { UserDefaults.standard.set(filterWeakEvents, forKey: "filter_weak_events") }
+    var minIntensity: Float = 0.0 {
+        didSet { UserDefaults.standard.set(minIntensity, forKey: "min_intensity") }
     }
-    var filterThreshold: Float = 0.15 {
-        didSet { UserDefaults.standard.set(filterThreshold, forKey: "filter_threshold") }
+    var basicMinMs: Int = 20 {
+        didSet {
+            UserDefaults.standard.set(basicMinMs, forKey: "basic_min_ms")
+            hapticPlayer.basicMinDurationMs = Double(basicMinMs)
+        }
     }
-
-    var effectiveMinIntensity: Float { filterWeakEvents ? filterThreshold : 0.0 }
+    var basicMaxMs: Int = 60 {
+        didSet {
+            UserDefaults.standard.set(basicMaxMs, forKey: "basic_max_ms")
+            hapticPlayer.basicMaxDurationMs = Double(basicMaxMs)
+        }
+    }
 
     var showDNDPrompt: Bool = false
     private(set) var dndNeverAsk: Bool = false {
@@ -58,16 +65,28 @@ final class AppState {
 
     init() {
         let defaults = UserDefaults.standard
-        if defaults.object(forKey: "strength_scale") != nil {
+        if defaults.object(forKey: "strength_scale") == nil {
+            defaults.set(Float(1.0), forKey: "strength_scale")
+            defaults.set(Float(0.0), forKey: "min_intensity")
+            defaults.set(20,         forKey: "basic_min_ms")
+            defaults.set(60,         forKey: "basic_max_ms")
+        } else {
             strengthScale = defaults.float(forKey: "strength_scale")
-        }
-        filterWeakEvents = defaults.bool(forKey: "filter_weak_events")
-        if defaults.object(forKey: "filter_threshold") != nil {
-            filterThreshold = defaults.float(forKey: "filter_threshold")
+            if defaults.object(forKey: "min_intensity") != nil {
+                minIntensity = defaults.float(forKey: "min_intensity")
+            }
+            if defaults.object(forKey: "basic_min_ms") != nil {
+                basicMinMs = defaults.integer(forKey: "basic_min_ms")
+            }
+            if defaults.object(forKey: "basic_max_ms") != nil {
+                basicMaxMs = defaults.integer(forKey: "basic_max_ms")
+            }
         }
         dndNeverAsk = defaults.bool(forKey: "dnd_never_ask")
         capabilities = detectCapabilities()
         hapticPlayer = HapticPlayer(capabilities: capabilities)
+        hapticPlayer.basicMinDurationMs = Double(basicMinMs)
+        hapticPlayer.basicMaxDurationMs = Double(basicMaxMs)
         try? hapticPlayer.setupEngine()
         startDiscovery()
     }
@@ -140,8 +159,8 @@ final class AppState {
                 mediaClock.syncAnchor(mediaT: t, serverNs: serverNs, rate: rate)
                 if let tl = currentTimeline {
                     scheduler.start(timeline: tl, mediaClock: mediaClock, player: hapticPlayer,
-                                    strengthScale: { [weak self] in self?.strengthScale ?? 1.5 },
-                                    minIntensity:  { [weak self] in self?.effectiveMinIntensity ?? 0.0 })
+                                    strengthScale: { [weak self] in self?.strengthScale ?? 1.0 },
+                                    minIntensity:  { [weak self] in self?.minIntensity ?? 0.0 })
                 }
             }
 
@@ -156,8 +175,8 @@ final class AppState {
                 mediaClock.syncAnchor(mediaT: t, serverNs: serverNs, rate: mediaClock.rate)
                 if mediaClock.isPlaying, let tl = currentTimeline {
                     scheduler.start(timeline: tl, mediaClock: mediaClock, player: hapticPlayer,
-                                    strengthScale: { [weak self] in self?.strengthScale ?? 1.5 },
-                                    minIntensity:  { [weak self] in self?.effectiveMinIntensity ?? 0.0 })
+                                    strengthScale: { [weak self] in self?.strengthScale ?? 1.0 },
+                                    minIntensity:  { [weak self] in self?.minIntensity ?? 0.0 })
                 }
             }
 
@@ -166,8 +185,8 @@ final class AppState {
                 mediaClock.syncAnchor(mediaT: mediaClock.mediaTime(), serverNs: serverNs, rate: rate)
                 if mediaClock.isPlaying, let tl = currentTimeline {
                     scheduler.start(timeline: tl, mediaClock: mediaClock, player: hapticPlayer,
-                                    strengthScale: { [weak self] in self?.strengthScale ?? 1.5 },
-                                    minIntensity:  { [weak self] in self?.effectiveMinIntensity ?? 0.0 })
+                                    strengthScale: { [weak self] in self?.strengthScale ?? 1.0 },
+                                    minIntensity:  { [weak self] in self?.minIntensity ?? 0.0 })
                 }
             }
 
@@ -232,7 +251,7 @@ final class AppState {
         let tl = Timeline(events: events)
         mediaClock.syncAnchor(mediaT: 0.0, serverNs: nanoTime(), rate: 1.0)
         scheduler.start(timeline: tl, mediaClock: mediaClock, player: hapticPlayer,
-                        strengthScale: { [weak self] in self?.strengthScale ?? 1.5 },
-                        minIntensity:  { [weak self] in self?.effectiveMinIntensity ?? 0.0 })
+                        strengthScale: { [weak self] in self?.strengthScale ?? 1.0 },
+                        minIntensity:  { [weak self] in self?.minIntensity ?? 0.0 })
     }
 }

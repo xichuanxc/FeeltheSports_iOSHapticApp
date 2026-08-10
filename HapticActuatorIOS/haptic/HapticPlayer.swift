@@ -12,6 +12,9 @@ final class HapticPlayer {
     private var engine: CHHapticEngine?
     private var engineReady = false
 
+    var basicMinDurationMs: Double = 20
+    var basicMaxDurationMs: Double = 60
+
     // Strong references keep players alive until CoreHaptics finishes playing them.
     // A ring buffer of 8 is far more than enough — haptics are 80–120 ms.
     private var retainedPlayers: [CHHapticPatternPlayer] = []

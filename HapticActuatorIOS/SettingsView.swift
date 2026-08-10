@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct SettingsView: View {
+struct AdvancedSettingsView: View {
     @Environment(AppState.self) private var state
 
     var body: some View {
@@ -8,12 +8,16 @@ struct SettingsView: View {
         ScrollView {
             VStack(spacing: 16) {
                 diagnosticsCard
-                controlsCard
+                strengthCard
+                minIntensityCard
+                if state.capabilities.tier == .none {
+                    motorDurationCard
+                }
                 testCard
             }
             .padding()
         }
-        .navigationTitle("Settings")
+        .navigationTitle("Advanced")
         .navigationBarTitleDisplayMode(.inline)
     }
 
@@ -29,13 +33,15 @@ struct SettingsView: View {
     // MARK: Diagnostics
 
     private var diagnosticsCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Session")
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Diagnostics")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            infoRow("Clock offset",  state.clockOffsetMs.map { "\($0) ms" } ?? "—")
-            infoRow("Events loaded", state.eventCount.map { "\($0)" } ?? "—")
-            infoRow("Last sync",     state.lastSyncMediaT.map { String(format: "%.3f s", $0) } ?? "—")
+            Text(clockAndTimelineText)
+                .font(.caption.monospacedDigit())
+            Text(syncText)
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
@@ -43,35 +49,86 @@ struct SettingsView: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
-    // MARK: Controls
+    private var clockAndTimelineText: String {
+        let clock    = state.clockOffsetMs.map { "\($0 >= 0 ? "+" : "")\($0) ms" } ?? "—"
+        let timeline = state.eventCount.map { "\($0) events" } ?? "—"
+        return "\(clock)  ·  \(timeline)"
+    }
 
-    private var controlsCard: some View {
+    private var syncText: String {
+        state.lastSyncMediaT.map { String(format: "Sync %.3f s", $0) } ?? "No sync yet"
+    }
+
+    // MARK: Strength
+
+    private var strengthCard: some View {
         @Bindable var state = state
-        return VStack(alignment: .leading, spacing: 14) {
-            Text("Controls")
+        return VStack(alignment: .leading, spacing: 8) {
+            Text("Haptic Strength")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Strength  \(String(format: "%.2f", state.strengthScale))×")
-                    .font(.caption)
-                Slider(value: $state.strengthScale, in: 0.5...3.0)
+            HStack {
+                Text("0.5×").font(.caption2).foregroundStyle(.secondary)
+                Slider(value: $state.strengthScale, in: 0.5...1.5, step: 0.05)
+                Text("1.5×").font(.caption2).foregroundStyle(.secondary)
             }
-            Toggle("Filter weak events", isOn: $state.filterWeakEvents)
+            Text("\(String(format: "%.2f", state.strengthScale))×")
                 .font(.caption)
-            if state.filterWeakEvents {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Drop events below \(String(format: "%.2f", state.filterThreshold))×")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Slider(value: $state.filterThreshold, in: 0.05...0.50, step: 0.01)
-                }
-                .transition(.opacity.combined(with: .move(edge: .top)))
-            }
+                .frame(maxWidth: .infinity, alignment: .center)
         }
         .padding()
         .background(Color(.secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12))
-        .animation(.easeInOut(duration: 0.2), value: state.filterWeakEvents)
+    }
+
+    // MARK: Min Intensity
+
+    private var minIntensityCard: some View {
+        @Bindable var state = state
+        return VStack(alignment: .leading, spacing: 8) {
+            Text("Min Intensity")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            HStack {
+                Text("0.0").font(.caption2).foregroundStyle(.secondary)
+                Slider(value: $state.minIntensity, in: 0.0...0.5, step: 0.01)
+                Text("0.5").font(.caption2).foregroundStyle(.secondary)
+            }
+            Text("Drop events below \(String(format: "%.2f", state.minIntensity))")
+                .font(.caption)
+                .frame(maxWidth: .infinity, alignment: .center)
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    // MARK: Motor Duration (Tier 3 only)
+
+    private var motorDurationCard: some View {
+        @Bindable var state = state
+        let lowerBinding = Binding<Double>(
+            get: { Double(state.basicMinMs) },
+            set: { state.basicMinMs = Int($0.rounded()) }
+        )
+        let upperBinding = Binding<Double>(
+            get: { Double(state.basicMaxMs) },
+            set: { state.basicMaxMs = Int($0.rounded()) }
+        )
+        return VStack(alignment: .leading, spacing: 8) {
+            Text("Motor Duration")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            RangeSlider(lower: lowerBinding, upper: upperBinding,
+                        range: 10...500, step: 10, minGap: 10)
+                .padding(.vertical, 4)
+            Text("\(state.basicMinMs) ms – \(state.basicMaxMs) ms")
+                .font(.caption)
+                .frame(maxWidth: .infinity, alignment: .center)
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
     // MARK: Test
@@ -81,8 +138,20 @@ struct SettingsView: View {
             Text("Test")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            Button("Test Timeline") { state.runTestTimeline() }
+            HStack(spacing: 12) {
+                Button("Lightest Hit") {
+                    state.hapticPlayer.play(visionType: nil, intensity: 0.1)
+                }
+                .buttonStyle(.bordered)
+                .frame(maxWidth: .infinity)
+                Button("Strongest Hit") {
+                    state.hapticPlayer.play(visionType: "strike", intensity: 1.0)
+                }
                 .buttonStyle(.borderedProminent)
+                .frame(maxWidth: .infinity)
+            }
+            Button("Test Timeline") { state.runTestTimeline() }
+                .buttonStyle(.bordered)
                 .frame(maxWidth: .infinity)
         }
         .padding()
@@ -94,16 +163,16 @@ struct SettingsView: View {
 extension HapticTier {
     var label: String {
         switch self {
-        case .coreHaptics: return "Core Haptics"
-        case .uiImpact:    return "UIImpact"
-        case .none:        return "None"
+        case .coreHaptics: return "Composition (Tier 1)"
+        case .uiImpact:    return "Amplitude (Tier 2)"
+        case .none:        return "Basic (Tier 3)"
         }
     }
 }
 
 #Preview {
     NavigationStack {
-        SettingsView()
+        AdvancedSettingsView()
             .environment(AppState())
     }
 }
