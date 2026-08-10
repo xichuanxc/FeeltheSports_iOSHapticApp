@@ -2,8 +2,6 @@ import SwiftUI
 import Darwin
 
 struct AboutView: View {
-    @Environment(AppState.self) private var state
-
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
@@ -120,6 +118,5 @@ struct AboutView: View {
 #Preview {
     NavigationStack {
         AboutView()
-            .environment(AppState())
     }
 }
