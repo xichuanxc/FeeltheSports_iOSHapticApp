@@ -109,7 +109,7 @@ struct AdvancedSettingsView: View {
                 .foregroundStyle(.secondary)
             HStack(spacing: 12) {
                 Button("Lightest Hit") {
-                    state.hapticPlayer.play(visionType: nil, intensity: 0.1)
+                    state.hapticPlayer.play(visionType: "strike", intensity: 0.1)
                 }
                 .buttonStyle(.bordered)
                 .frame(maxWidth: .infinity)
@@ -119,9 +119,6 @@ struct AdvancedSettingsView: View {
                 .buttonStyle(.borderedProminent)
                 .frame(maxWidth: .infinity)
             }
-            Button("Test Timeline") { state.runTestTimeline() }
-                .buttonStyle(.bordered)
-                .frame(maxWidth: .infinity)
         }
         .padding()
         .background(Color(.secondarySystemBackground))

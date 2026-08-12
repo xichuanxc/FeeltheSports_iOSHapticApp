@@ -216,19 +216,4 @@ final class AppState {
         connectionStatus = .searching
     }
 
-    func runTestTimeline() {
-        let events: [HapticEvent] = [
-            HapticEvent(time: 0.0, intensity: 0.8, visionType: "strike"),
-            HapticEvent(time: 0.4, intensity: 0.6, visionType: "bounce"),
-            HapticEvent(time: 0.8, intensity: 0.9, visionType: "strike"),
-            HapticEvent(time: 1.2, intensity: 0.5, visionType: nil),
-            HapticEvent(time: 1.6, intensity: 0.7, visionType: "bounce"),
-            HapticEvent(time: 2.0, intensity: 1.0, visionType: "strike"),
-        ]
-        let tl = Timeline(events: events)
-        mediaClock.syncAnchor(mediaT: 0.0, serverNs: nanoTime(), rate: 1.0)
-        scheduler.start(timeline: tl, mediaClock: mediaClock, player: hapticPlayer,
-                        strengthScale: { [weak self] in self?.strengthScale ?? 1.0 },
-                        minIntensity:  { [weak self] in self?.minIntensity ?? 0.0 })
-    }
 }
