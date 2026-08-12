@@ -118,7 +118,7 @@ final class HapticPlayer {
     private func makeHapticEvent(_ e: BatchEvent, relativeTime: TimeInterval) -> CHHapticEvent {
         let raw = max(e.intensity, 0.55)
         switch e.visionType {
-        case "strike":
+        default:
             return CHHapticEvent(
                 eventType: .hapticTransient,
                 parameters: [
@@ -127,36 +127,10 @@ final class HapticPlayer {
                 ],
                 relativeTime: relativeTime
             )
-        case "bounce":
-            return CHHapticEvent(
-                eventType: .hapticContinuous,
-                parameters: [
-                    .init(parameterID: .hapticIntensity, value: min(raw * 0.90, 1.0)),
-                    .init(parameterID: .hapticSharpness, value: 0.05)
-                ],
-                relativeTime: relativeTime,
-                duration: 0.12
-            )
-        default:
-            return CHHapticEvent(
-                eventType: .hapticContinuous,
-                parameters: [
-                    .init(parameterID: .hapticIntensity, value: min(raw * 0.95, 1.0)),
-                    .init(parameterID: .hapticSharpness, value: 0.5)
-                ],
-                relativeTime: relativeTime,
-                duration: 0.08
-            )
         }
     }
 
-    private func eventDuration(for visionType: String?) -> Double {
-        switch visionType {
-        case "bounce": return 0.12
-        case "strike": return 0.0
-        default:       return 0.08
-        }
-    }
+    private func eventDuration(for visionType: String?) -> Double { 0.0 }
 
     // MARK: - UIImpact fallback (tier 2)
 
