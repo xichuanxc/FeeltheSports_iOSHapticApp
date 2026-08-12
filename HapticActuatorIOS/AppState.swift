@@ -21,19 +21,6 @@ final class AppState {
     var minIntensity: Float = 0.0 {
         didSet { UserDefaults.standard.set(minIntensity, forKey: "min_intensity") }
     }
-    var basicMinMs: Int = 20 {
-        didSet {
-            UserDefaults.standard.set(basicMinMs, forKey: "basic_min_ms")
-            hapticPlayer.basicMinDurationMs = Double(basicMinMs)
-        }
-    }
-    var basicMaxMs: Int = 60 {
-        didSet {
-            UserDefaults.standard.set(basicMaxMs, forKey: "basic_max_ms")
-            hapticPlayer.basicMaxDurationMs = Double(basicMaxMs)
-        }
-    }
-
     var showDNDPrompt: Bool = false
     private(set) var dndNeverAsk: Bool = false {
         didSet { UserDefaults.standard.set(dndNeverAsk, forKey: "dnd_never_ask") }
@@ -68,25 +55,15 @@ final class AppState {
         if defaults.object(forKey: "strength_scale") == nil {
             defaults.set(Float(1.0), forKey: "strength_scale")
             defaults.set(Float(0.0), forKey: "min_intensity")
-            defaults.set(20,         forKey: "basic_min_ms")
-            defaults.set(60,         forKey: "basic_max_ms")
         } else {
             strengthScale = defaults.float(forKey: "strength_scale")
             if defaults.object(forKey: "min_intensity") != nil {
                 minIntensity = defaults.float(forKey: "min_intensity")
             }
-            if defaults.object(forKey: "basic_min_ms") != nil {
-                basicMinMs = defaults.integer(forKey: "basic_min_ms")
-            }
-            if defaults.object(forKey: "basic_max_ms") != nil {
-                basicMaxMs = defaults.integer(forKey: "basic_max_ms")
-            }
         }
         dndNeverAsk = defaults.bool(forKey: "dnd_never_ask")
         capabilities = detectCapabilities()
         hapticPlayer = HapticPlayer(capabilities: capabilities)
-        hapticPlayer.basicMinDurationMs = Double(basicMinMs)
-        hapticPlayer.basicMaxDurationMs = Double(basicMaxMs)
         try? hapticPlayer.setupEngine()
         startDiscovery()
     }

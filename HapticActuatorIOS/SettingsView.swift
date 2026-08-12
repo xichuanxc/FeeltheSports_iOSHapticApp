@@ -10,9 +10,6 @@ struct AdvancedSettingsView: View {
                 diagnosticsCard
                 strengthCard
                 minIntensityCard
-                if state.capabilities.tier == .none {
-                    motorDurationCard
-                }
                 testCard
             }
             .padding()
@@ -95,34 +92,6 @@ struct AdvancedSettingsView: View {
                 Text("0.5").font(.caption2).foregroundStyle(.secondary)
             }
             Text("Drop events below \(String(format: "%.2f", state.minIntensity))")
-                .font(.caption)
-                .frame(maxWidth: .infinity, alignment: .center)
-        }
-        .padding()
-        .background(Color(.secondarySystemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-    }
-
-    // MARK: Motor Duration (Tier 3 only)
-
-    private var motorDurationCard: some View {
-        @Bindable var state = state
-        let lowerBinding = Binding<Double>(
-            get: { Double(state.basicMinMs) },
-            set: { state.basicMinMs = Int($0.rounded()) }
-        )
-        let upperBinding = Binding<Double>(
-            get: { Double(state.basicMaxMs) },
-            set: { state.basicMaxMs = Int($0.rounded()) }
-        )
-        return VStack(alignment: .leading, spacing: 8) {
-            Text("Motor Duration")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            RangeSlider(lower: lowerBinding, upper: upperBinding,
-                        range: 10...500, step: 10, minGap: 10)
-                .padding(.vertical, 4)
-            Text("\(state.basicMinMs) ms – \(state.basicMaxMs) ms")
                 .font(.caption)
                 .frame(maxWidth: .infinity, alignment: .center)
         }
